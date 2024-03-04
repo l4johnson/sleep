@@ -125,3 +125,9 @@ stepsData = api.get_steps_data(today.isoformat())
 steps = sumDay(stepsData, 'steps')
 print(steps)
 print(type(stepsData))
+
+sleepData = api.get_sleep_data(yesterday)
+print(sleepData)
+print(type(sleepData))
+sleepWindowConfirmed = sleepData['dailySleepDto']['sleepWindowConfirmed']
+print(sleepWindowConfirmed)
