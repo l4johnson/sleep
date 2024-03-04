@@ -126,8 +126,13 @@ steps = sumDay(stepsData, 'steps')
 print(steps)
 print(type(stepsData))
 
-sleepData = api.get_sleep_data(yesterday)
-print(sleepData)
-print(type(sleepData))
-sleepWindowConfirmed = sleepData['dailySleepDto']['sleepWindowConfirmed']
+## gathering all sleep data
+sleepData = api.get_sleep_data(today)
+print(sleepData['dailySleepDTO'])
+
+sleepWindowConfirmed = sleepData['dailySleepDTO']['sleepWindowConfirmed']
 print(sleepWindowConfirmed)
+
+if sleepWindowConfirmed == True: 
+    asleepTime = sleepData['sleepTimeSeconds']
+    sleepStartTime = datetime.utcfromtimestamp(sleepData['sleepStartTimestampLocal'])
