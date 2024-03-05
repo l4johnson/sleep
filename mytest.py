@@ -7,6 +7,7 @@ export PASSWORD=<your garmin password>
 
 """
 import datetime
+import pytz
 import json
 import logging
 import os
@@ -115,24 +116,45 @@ def sumDay(dataList, value):
         total = total + item[value]
     return total
 
+def convert_gmt_timestamp_to_local(gmt_timestamp, local_timezone='America/Los_Angeles'):
+    # Convert milliseconds to seconds
+    timestamp_seconds = gmt_timestamp / 1000
+
+    # Create a timezone-aware UTC datetime object
+    utc_datetime = datetime.datetime.fromtimestamp(timestamp_seconds, tz=datetime.timezone.utc)
+
+    # Convert to local time (Pacific Time)
+    local_timezone_obj = pytz.timezone(local_timezone)
+    local_datetime = utc_datetime.astimezone(local_timezone_obj)
+
+    return local_datetime.replace(tzinfo=None)
 
 api = init_api(email, password)
 stats = api.get_stats(today.isoformat())
-print(stats)
-print(stats['totalKilocalories'])
+print(f"Stats: {stats}")
+print(f"totalKilocalories: {stats['totalKilocalories']}")
 
 stepsData = api.get_steps_data(today.isoformat())
 steps = sumDay(stepsData, 'steps')
-print(steps)
-print(type(stepsData))
+print(f"Steps: {steps}")
+print(f"Steps data type: {type(stepsData)}")
 
 ## gathering all sleep data
 sleepData = api.get_sleep_data(today)
-print(sleepData['dailySleepDTO'])
+sleepSummary = sleepData['dailySleepDTO']
+print(f"Sleep Summary: {sleepSummary}")
 
 sleepWindowConfirmed = sleepData['dailySleepDTO']['sleepWindowConfirmed']
-print(sleepWindowConfirmed)
+print(f"SleepWindowConfirmed: {sleepWindowConfirmed}")
 
 if sleepWindowConfirmed == True: 
-    asleepTime = sleepData['sleepTimeSeconds']
-    sleepStartTime = datetime.utcfromtimestamp(sleepData['sleepStartTimestampLocal'])
+    sleepTimeHours = sleepSummary['sleepTimeSeconds'] / 3600
+    print(f"Time asleep: {sleepTimeHours:.2f} hours")
+    sleepStartTime = sleepSummary['sleepStartTimestampGMT']
+    sleepStartTime = convert_gmt_timestamp_to_local(sleepStartTime)
+    print(f"Sleep start time: {sleepStartTime}")
+    sleepEndTime = sleepSummary['sleepEndTimestampGMT']
+    sleepEndTime = convert_gmt_timestamp_to_local(sleepEndTime)
+    print(f"Sleep end time: {sleepEndTime}")
+    sleepScore = sleepSummary['sleepScores']['overall']['value']
+    print(f"Sleepscore: {sleepScore}")
