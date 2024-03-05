@@ -40,7 +40,7 @@ api = None
 # Example selections and settings
 today = datetime.date.today()
 startdate = today - datetime.timedelta(days=7)  # Select past week
-yesterday = today - datetime.timedelta(days=2)
+yesterday = today - datetime.timedelta(days=1)
 start = 0
 limit = 100
 start_badge = 1  # Badge related calls calls start counting at 1
@@ -130,8 +130,12 @@ def convert_gmt_timestamp_to_local(gmt_timestamp, local_timezone='America/Los_An
     return local_datetime.replace(tzinfo=None)
 
 api = init_api(email, password)
+
+#getting stats
+data = {"Date": today, "totalKilocalories": 0, "activeKilocalories": 0, "totalSteps": 0, "highlyActiveSeconds": 0, "activeSeconds": 0, "sedentarySaconds": 0, "includesActivityData": False, "bodyBatteryDrainedValue": 0, "bodyBatteryChargedValue": 0, "bodyBatteryLowestValue": 0, "bodyBatteryHighestValue": 0, "avgWakingRespirationValue": 0}
 stats = api.get_stats(today.isoformat())
 print(f"Stats: {stats}")
+totalKilocalories = stats['totalKilocalories']
 print(f"totalKilocalories: {stats['totalKilocalories']}")
 
 stepsData = api.get_steps_data(today.isoformat())
