@@ -6,6 +6,7 @@ export EMAIL=<your garmin email>
 export PASSWORD=<your garmin password>
 
 """
+import sys
 import datetime
 import pytz
 import json
@@ -129,36 +130,92 @@ def convert_gmt_timestamp_to_local(gmt_timestamp, local_timezone='America/Los_An
 
     return local_datetime.replace(tzinfo=None)
 
+def user_input(message, valueType, min, max):
+    while True:
+        try:
+            if valueType == 'int':
+                userInput = int(input(message + " "))
+            elif valueType == 'bool':
+                userInput = input(message + " ")
+                if userInput.lower() not in ["y", "n"]:
+                    print("Error: please enter y or n")
+                    continue
+                elif userInput.lower() == "y":
+                    return True
+                else:
+                    return False
+            elif valueType == 'float':
+                userInput = float(input(message + " "))
+            if min <= userInput <= max:
+                return userInput
+            else:
+                print("Invalid input. Try again.")
+        except ValueError:
+            print(f"Invalid input. Please enter a valid {valueType}")
+
 api = init_api(email, password)
+if api == False:
+    print("failed to login and initialize api")
+    sys.exit()
 
-#getting stats
-data = {"Date": today, "totalKilocalories": 0, "activeKilocalories": 0, "totalSteps": 0, "highlyActiveSeconds": 0, "activeSeconds": 0, "sedentarySaconds": 0, "includesActivityData": False, "bodyBatteryDrainedValue": 0, "bodyBatteryChargedValue": 0, "bodyBatteryLowestValue": 0, "bodyBatteryHighestValue": 0, "avgWakingRespirationValue": 0}
-stats = api.get_stats(today.isoformat())
-print(f"Stats: {stats}")
-totalKilocalories = stats['totalKilocalories']
-print(f"totalKilocalories: {stats['totalKilocalories']}")
+#getting yesterday's relevent Health Data
+releventHealthData = {"totalKilocalories": 0, "activeKilocalories": 0, "totalSteps": 0, "highlyActiveSeconds": 0, 
+    "activeSeconds": 0, "sedentarySeconds": 0, "bodyBatteryDrainedValue": 0, "bodyBatteryChargedValue": 0, 
+    "bodyBatteryLowestValue": 0, "bodyBatteryHighestValue": 0, "avgWakingRespirationValue": 0 
+    }
+stats = api.get_stats(yesterday.isoformat())
+for key in releventHealthData:
+    if key in stats:
+        releventHealthData[key] = stats[key]
+print(releventHealthData)
+print()
 
-stepsData = api.get_steps_data(today.isoformat())
-steps = sumDay(stepsData, 'steps')
-print(f"Steps: {steps}")
-print(f"Steps data type: {type(stepsData)}")
+## gathering yesterday's relevent heart data
+releventHeartrateData = {'maxHeartRate': 0, 'restingHeartRate': 0}
+heartData = api.get_heart_rates(yesterday.isoformat())
+for key in releventHeartrateData:
+    if key in heartData:
+        releventHeartrateData[key] = heartData[key]
+print(f"releventHeartrateData: {releventHeartrateData}")
+print()
 
-## gathering all sleep data
+## gathering yesterday's relevent stress data
+releventStressData = {'maxStressLevel': 0, 'avgStressLevel': 0}
+stressData = api.get_stress_data(yesterday.isoformat())
+for key in releventStressData:
+    if key in stressData:
+        releventStressData[key] = stressData[key]
+print(f"releventStressData: {releventStressData}")
+print()
+
+## gathering last night's relevent sleep data
+releventSleepData = {'sleepWindowConfirmed': False, 'sleepTimeHours': 0, 'sleepStartTime': 0, 'sleepEndTime': 0, 'sleepScore': 0}
 sleepData = api.get_sleep_data(today)
 sleepSummary = sleepData['dailySleepDTO']
-print(f"Sleep Summary: {sleepSummary}")
-
-sleepWindowConfirmed = sleepData['dailySleepDTO']['sleepWindowConfirmed']
-print(f"SleepWindowConfirmed: {sleepWindowConfirmed}")
-
-if sleepWindowConfirmed == True: 
-    sleepTimeHours = sleepSummary['sleepTimeSeconds'] / 3600
-    print(f"Time asleep: {sleepTimeHours:.2f} hours")
+releventSleepData['sleepWindowConfirmed'] = sleepData['dailySleepDTO']['sleepWindowConfirmed']
+if releventSleepData['sleepWindowConfirmed'] == True: 
+    releventSleepData['sleepTimeHours'] = sleepSummary['sleepTimeSeconds'] / 3600
     sleepStartTime = sleepSummary['sleepStartTimestampGMT']
-    sleepStartTime = convert_gmt_timestamp_to_local(sleepStartTime)
-    print(f"Sleep start time: {sleepStartTime}")
+    releventSleepData['sleepStartTime'] = convert_gmt_timestamp_to_local(sleepStartTime)
     sleepEndTime = sleepSummary['sleepEndTimestampGMT']
-    sleepEndTime = convert_gmt_timestamp_to_local(sleepEndTime)
-    print(f"Sleep end time: {sleepEndTime}")
-    sleepScore = sleepSummary['sleepScores']['overall']['value']
-    print(f"Sleepscore: {sleepScore}")
+    releventSleepData['sleepEndTime'] = convert_gmt_timestamp_to_local(sleepEndTime)
+    releventSleepData['sleepScore'] = sleepSummary['sleepScores']['overall']['value']
+    print(releventSleepData)
+    print()
+else:
+    print("No sleep data available from last night")
+    sys.exit()
+
+## gathering user input stats
+todaysData = {'wakefulness': 0, 'cupsOfCoffee': 0, 'modafanil': 0, 'exerciseYesterday': False, 'exerciseToday': False, 'focus': 0, 'dayScore': 0, 'enjoyability': 0}
+todaysData['wakefulness'] = user_input("How awake did you feel today? (1-10)", 'int', 1, 10)
+todaysData['cupsOfCoffee'] = user_input("How many cups of coffee did you have today? (0-10)", 'int', 0, 10)
+todaysData['modafanil'] = user_input("How much modafanil did you have today? (0-2 in steps of 0.5)", 'float', 0, 2)
+todaysData['exerciseYesterday'] = user_input("Did you exercise yesterday? (y/n)", 'bool', False, True)
+todaysData['exerciseToday'] = user_input("Did you exercise today? (y/n)", 'bool', False, True)
+todaysData['focus'] = user_input("How well were you able to focus today? (1-10)", 'int', 1, 10)
+todaysData['dayScore'] = user_input("On a scale from 1-10, was today a bad day (1) or a good day (10)?", 'int', 1, 10)
+todaysData['enjoyability'] = user_input("How enjoyable were the tasks you worked on today?", 'int', 1, 10)
+
+
+print(f"Number of tracked stats: {len(releventHealthData)+len(releventSleepData)+len(releventHeartrateData)+len(releventStressData)+len(todaysData)}")
