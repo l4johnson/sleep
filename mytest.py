@@ -197,7 +197,7 @@ else:
 todaysData = {'wakefulness': 0, 'cupsOfCoffee': 0, 'modafanil': 0, 'exerciseYesterday': False, 'exerciseToday': False, 'focus': 0, 'dayScore': 0, 'enjoyability': 0}
 todaysData['wakefulness'] = user_input("How awake did you feel today? (1-10)", 'int', 1, 10)
 todaysData['cupsOfCoffee'] = user_input("How many cups of coffee did you have today? (0-10)", 'int', 0, 10)
-todaysData['modafanil'] = user_input("How much modafanil did you have today? (0-2 in steps of 0.5)", 'float', 0, 2)
+todaysData['modafanil'] = user_input("How much modafanil did you have today? (0-2 in steps of 0.25)", 'float', 0, 2)
 todaysData['exerciseYesterday'] = user_input("Did you exercise yesterday? (y/n)", 'bool', False, True)
 todaysData['exerciseToday'] = user_input("Did you exercise today? (y/n)", 'bool', False, True)
 todaysData['focus'] = user_input("How well were you able to focus today? (1-10)", 'int', 1, 10)
