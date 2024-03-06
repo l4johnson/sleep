@@ -104,12 +104,6 @@ def init_api(email, password):
 
     return garmin
 
-def sumDay(dataList, value):
-    total = 0
-    for item in dataList:
-        total = total + item[value]
-    return total
-
 def convert_gmt_timestamp_to_local(gmt_timestamp, local_timezone='America/Los_Angeles'):
     # Convert milliseconds to seconds
     timestamp_seconds = gmt_timestamp / 1000
