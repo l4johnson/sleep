@@ -167,7 +167,7 @@ stats = api.get_stats(yesterday.isoformat())
 for key in releventHealthData:
     if key in stats:
         releventHealthData[key] = stats[key]
-print(releventHealthData)
+print(f"releventHealthData: {releventHealthData}")
 print()
 
 ## gathering yesterday's relevent heart data
@@ -200,7 +200,7 @@ if releventSleepData['sleepWindowConfirmed'] == True:
     sleepEndTime = sleepSummary['sleepEndTimestampGMT']
     releventSleepData['sleepEndTime'] = convert_gmt_timestamp_to_local(sleepEndTime)
     releventSleepData['sleepScore'] = sleepSummary['sleepScores']['overall']['value']
-    print(releventSleepData)
+    print(f"releventSleepData: {releventSleepData}")
     print()
 else:
     print("No sleep data available from last night")
@@ -216,6 +216,11 @@ todaysData['exerciseToday'] = user_input("Did you exercise today? (y/n)", 'bool'
 todaysData['focus'] = user_input("How well were you able to focus today? (1-10)", 'int', 1, 10)
 todaysData['dayScore'] = user_input("On a scale from 1-10, was today a bad day (1) or a good day (10)?", 'int', 1, 10)
 todaysData['enjoyability'] = user_input("How enjoyable were the tasks you worked on today?", 'int', 1, 10)
+print()
 
+## putting data into one dictionary
+allData = {"date": today, **releventHealthData, **releventHeartrateData, **releventSleepData, **releventStressData, **todaysData}
+#print(allData)
+#print()
 
-print(f"Number of tracked stats: {len(releventHealthData)+len(releventSleepData)+len(releventHeartrateData)+len(releventStressData)+len(todaysData)}")
+print(f"Number of tracked stats: {len(allData)}")
