@@ -42,13 +42,6 @@ api = None
 today = datetime.date.today()
 startdate = today - datetime.timedelta(days=7)  # Select past week
 yesterday = today - datetime.timedelta(days=1)
-start = 0
-limit = 100
-start_badge = 1  # Badge related calls calls start counting at 1
-activitytype = ""  # Possible values are: cycling, running, swimming, multi_sport, fitness_equipment, hiking, walking, other
-activityfile = "MY_ACTIVITY.fit"  # Supported file types are: .fit .gpx .tcx
-weight = 89.6
-weightunit = 'kg'
 
 def get_credentials():
     """Get user credentials."""
