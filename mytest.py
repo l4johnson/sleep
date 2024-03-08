@@ -14,6 +14,7 @@ import logging
 import os
 import sys
 from getpass import getpass
+import openpyxl
 
 import readchar
 import requests
@@ -146,7 +147,7 @@ if api == False:
     sys.exit()
 
 #getting yesterday's relevent Health Data
-releventHealthData = {"totalKilocalories": 0, "activeKilocalories": 0, "totalSteps": 0, "highlyActiveSeconds": 0, 
+releventHealthData = {"totalKilocalories": 0, "totalSteps": 0, "highlyActiveSeconds": 0, 
     "activeSeconds": 0, "sedentarySeconds": 0, "bodyBatteryDrainedValue": 0, "bodyBatteryChargedValue": 0, 
     "bodyBatteryLowestValue": 0, "bodyBatteryHighestValue": 0, "avgWakingRespirationValue": 0 
     }
@@ -203,11 +204,63 @@ todaysData['exerciseToday'] = user_input("Did you exercise today? (y/n)", 'bool'
 todaysData['focus'] = user_input("How well were you able to focus today? (1-10)", 'int', 1, 10)
 todaysData['dayScore'] = user_input("On a scale from 1-10, was today a bad day (1) or a good day (10)?", 'int', 1, 10)
 todaysData['enjoyability'] = user_input("How enjoyable were the tasks you worked on today?", 'int', 1, 10)
-print()
+print() 
 
 ## putting data into one dictionary
-allData = {"date": today, **releventHealthData, **releventHeartrateData, **releventSleepData, **releventStressData, **todaysData}
+allData = {"date": today, **todaysData, **releventSleepData, **releventHealthData, **releventHeartrateData, **releventStressData}
 #print(allData)
 #print()
+numStats = len(allData)
 
-print(f"Number of tracked stats: {len(allData)}")
+print(f"Number of tracked stats: {numStats}")
+
+
+## writing data to excel file
+# opening excel file
+excelWorkbook = openpyxl.load_workbook('sleepdata.xlsx')
+
+# selecting sheet
+sheet_by_name = excelWorkbook['data']
+sheet = excelWorkbook.active
+
+# reading data names from excel
+colNames = []
+for row in sheet.iter_rows(min_row=1, max_col=numStats, max_row=1, values_only=True):
+    for value in row:
+        colNames.append(value)
+
+# if excel sheet is empty, load in variable names
+dataNames = list(allData.keys())
+if colNames[0] == None:
+    index = 0
+    for row in sheet.iter_rows(min_row=1, max_col=numStats, max_row=1):
+        for cell in row:
+            cell.value = dataNames[index]
+            index = index + 1
+
+# finding first new line
+newRow = 1
+while(newRow < 10):
+    cell = sheet.cell(row = newRow, column = 1)
+    if cell.value == None:
+        break
+    else:
+        newRow = newRow + 1
+
+# checking to see if data has been logged today
+if newRow > 2 and sheet.cell(row = newRow-1, column = 1).value.date() == today:
+    reenter = user_input("Data already entered for today. Would you like to re-enter data? (y/n)", 'bool', 0, 1)
+    if reenter:
+        newRow = newRow - 1
+    else: 
+        sys.exit()
+
+# writing data to sheet
+index = 0
+for row in sheet.iter_rows(min_row=newRow, max_col=numStats, max_row=newRow):
+    for cell in row:
+        cell.value = allData[dataNames[index]]
+        index = index + 1
+
+excelWorkbook.save('sleepdata.xlsx')
+print("data saved.")
